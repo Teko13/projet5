@@ -49,6 +49,95 @@ exports.updateSauce = (req, res, next) => {
     }
 }
 
+exports.SauceReview = (req, res, next) => {
+    Sauce.findOne({ _id: req.params.id })
+        .then(sauce => {
+            const userLikeArray = sauce.usersLiked;
+            const userDislikeArray = sauce.usersDisliked;
+            const userInLikeArray = userLikeArray
+                .find(userId => userId === req.body.userId);
+            const userInDislikeArray = userDislikeArray
+                .find(userId => userId === req.body.userId);
+
+            switch (req.body.like) {
+                case 1:
+                    try {
+                        if (!userInLikeArray && !userInDislikeArray) {
+                            userLikeArray.push(req.body.userId)
+                            Sauce.updateOne({ _id: req.params.id },
+                                {
+                                    likes: sauce.likes += 1,
+                                    usersLiked: userLikeArray
+                                })
+                                .then(() => res.status(200).json({ message: 'like ajouter' }))
+                                .catch(error => { throw error })
+                        }
+                        else {
+                            throw Error('vous avez deja liker ou disliker cette sauce')
+                        }
+                    } catch (error) {
+                        res.status(400).json({ error })
+                    }
+                    break;
+                case -1:
+                    try {
+                        if (!userInLikeArray && !userInDislikeArray) {
+                            userDislikeArray.push(req.body.userId)
+                            Sauce.updateOne({ _id: req.params.id },
+                                {
+                                    dislikes: sauce.dislikes += 1,
+                                    usersDisliked: userDislikeArray
+                                })
+                                .then(() => res.status(200).json({ message: 'dislike ajouter' }))
+                                .catch(error => { throw error })
+                        }
+                        else {
+                            throw Error('vous avez deja liker ou disliker cette sauce')
+                        }
+                    } catch (error) {
+                        res.status(400).json({ error })
+                    }
+                    break;
+                case 0:
+                    try {
+                        if (userInLikeArray) {
+                            const index = userLikeArray.findIndex(userId => userId === req.body.uerId);
+                            userLikeArray.splice(index, 1)
+                            Sauce.updateOne({ _id: req.params.id },
+                                {
+                                    likes: sauce.likes -= 1,
+                                    usersLiked: userLikeArray
+                                })
+                                .then(() => res.status(200).json({ message: 'like annuler' }))
+                                .catch(error => { throw error })
+                        }
+                        else if (userInDislikeArray) {
+                            const index = userDislikeArray.findIndex(userId => userId === req.body.uerId);
+                            userDislikeArray.splice(index, 1)
+                            Sauce.updateOne({ _id: req.params.id },
+                                {
+                                    dislikes: sauce.dislikes -= 1,
+                                    usersDisliked: userDislikeArray
+                                })
+                                .then(() => res.status(200).json({ message: 'dislike annuler' }))
+                                .catch(error => { throw error })
+                        }
+                        else {
+                            throw Error('Aucun like ou dislike a annuler')
+                        }
+                    } catch (error) {
+                        res.status(400).json({ error })
+                    }
+                    break;
+
+                default:
+                    res.status(400).json({ message: 'erreur anonyme' })
+                    break;
+            }
+        })
+        .catch(error => res.status(500).json({ error }))
+}
+
 exports.deleteSauce = (req, res, next) => {
     Sauce.findOne({ _id: req.params.id })
         .then(sauce => {
