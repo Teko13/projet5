@@ -49,3 +49,16 @@ exports.updateSauce = (req, res, next) => {
     }
 }
 
+exports.deleteSauce = (req, res, next) => {
+    Sauce.findOne({ _id: req.params.id })
+        .then(sauce => {
+            const sauceName = sauce.imageUrl.split('/images/')[1];
+            fs.unlink(`images/${sauceName}`, () => {
+                Sauce.deleteOne({ _id: req.params.id })
+                    .then(() => res.status(200).json({ message: 'sauce supprimer' }))
+                    .catch(error => res.status(400).json({ error }))
+            })
+        })
+        .catch(error => res.staus(500).json({ error }))
+}
+
